@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="morning">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUMINA — 3D Artisanal Café & Specialty Roastery</title>
+  <meta name="description" content="Immerse in Lumina: Production-ready 3D web coffee experience featuring interactive 360 drink customizer, single origin roasts, and ambient lounge soundscape.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Spline Viewer Script Tag -->
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.72/build/spline-viewer.js"></script>
+</head>
+<body>
+
+  <!-- NAVIGATION BAR -->
+  <nav class="navbar" id="navbar">
+    <a href="#" class="brand-logo">
+      <i class="fas fa-coffee" style="color:var(--accent-gold);"></i>
+      LUMINA<span>.</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#customizer">3D Crafting Lab</a></li>
+      <li><a href="#menu">Signature Menu</a></li>
+      <li><a href="#ambiance">Atmosphere</a></li>
+      <li><a href="#reservation">Reservations</a></li>
+      <li><a href="#location">Hours & Location</a></li>
+    </ul>
+
+    <div class="nav-controls">
+      <button class="control-btn" id="theme-toggle-btn" title="Change Ambiance Theme">
+        <i class="fas fa-palette"></i> ☀️ Morning
+      </button>
+
+      <button class="control-btn" id="audio-toggle-btn" title="Toggle Café Ambient Soundscape">
+        <i class="fas fa-volume-mute"></i> Soundscape
+      </button>
+
+      <a href="#reservation" class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">
+        Reserve Table
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="badge-tag" id="live-status-badge">
+        <span class="pulse-dot"></span> OPEN NOW • Closes at 10 PM
+      </div>
+
+      <h1 class="hero-title">
+        Artisanal Brews, <span>Elevated Moments.</span>
+      </h1>
+
+      <p class="hero-desc">
+        Welcome to Lumina—where precision roastery meets immersive 3D digital craftsmanship. Explore our interactive drink lab, custom single-origin beans, and warm café atmosphere.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#customizer" class="btn-primary">
+          <i class="fas fa-cubes"></i> Launch 3D Crafting Lab
+        </a>
+        <a href="#menu" class="btn-secondary">
+          <i class="fas fa-utensils"></i> Explore Menu
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <h3>100%</h3>
+          <p>Single Origin</p>
+        </div>
+        <div class="stat-item">
+          <h3>24h</h3>
+          <p>Nitro Cold Brew</p>
+        </div>
+        <div class="stat-item">
+          <h3>4.9★</h3>
+          <p>Customer Rating</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-3d-wrapper">
+      <div class="spline-container">
+        <!-- Spline 3D Scene Viewer with Fallback 3D Canvas Physics -->
+        <spline-viewer url="https://prod.spline.design/6W201E7M272J1W23/scene.splinecode" loading-anim-type="spinner"></spline-viewer>
+        <canvas id="hero-3d-canvas" class="canvas-hero-3d"></canvas>
+      </div>
+
+      <div class="hero-3d-badge">
+        <i class="fas fa-hand-pointer"></i> Drag mouse to interact with floating 3D roast particles & steam
+      </div>
+    </div>
+  </header>
+
+  <!-- SECTION 1: 3D DRINK CRAFTING LAB -->
+  <section class="section" id="customizer">
+    <div class="section-header">
+      <span class="section-subtitle">Interactive Experience</span>
+      <h2 class="section-title">3D Drink Crafting Lab</h2>
+      <p class="section-desc">
+        Customize your ideal brew in 3D. Rotate the coffee cup 360°, adjust roast intensity, milk foam density, and latte art in real time.
+      </p>
+    </div>
+
+    <div class="customizer-grid">
+      <div class="customizer-viewport">
+        <canvas id="customizer-canvas"></canvas>
+
+        <div class="hero-3d-badge" style="top: 20px; bottom: auto; left: 20px;">
+          <i class="fas fa-sync-alt"></i> 360° Drag to Rotate View
+        </div>
+      </div>
+
+      <div class="customizer-controls glass-card" style="padding: 32px;">
+        <div class="control-group">
+          <div class="control-label">
+            <span>Coffee Base</span>
+          </div>
+          <div class="option-chips">
+            <button class="chip-btn active" data-opt="base" data-val="latte">Velvet Latte</button>
+            <button class="chip-btn" data-opt="base" data-val="espresso">Solo Espresso</button>
+            <button class="chip-btn" data-opt="base" data-val="cappuccino">Cappuccino</button>
+            <button class="chip-btn" data-opt="base" data-val="macchiato">Macchiato</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Roast Profile</span>
+          </div>
+          <div class="option-chips">
+            <button class="chip-btn" data-opt="roast" data-val="light">Light Citrus (Ethiopia)</button>
+            <button class="chip-btn active" data-opt="roast" data-val="medium">Medium Caramel (Colombia)</button>
+            <button class="chip-btn" data-opt="roast" data-val="dark">Dark Chocolate (Sumatra)</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Latte Art Style</span>
+          </div>
+          <div class="option-chips">
+            <button class="chip-btn active" data-opt="art" data-val="rosetta">Rosetta Leaf</button>
+            <button class="chip-btn" data-opt="art" data-val="heart">Classic Heart</button>
+            <button class="chip-btn" data-opt="art" data-val="tulip">Triple Tulip</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            Milk Foam Height <span>Microfoam Density</span>
+          </div>
+          <input type="range" class="slider-input" id="foam-slider" min="0.1" max="1" step="0.05" value="0.6">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            Sweetness Level <span>Raw Organic Honey</span>
+          </div>
+          <input type="range" class="slider-input" id="sweet-slider" min="0" max="4" step="1" value="2">
+        </div>
+
+        <div class="flavor-radar-card">
+          <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">
+            <i class="fas fa-chart-pie" style="color: var(--accent-gold); margin-right: 6px;"></i> Live Flavor Profile
+          </div>
+
+          <div class="radar-bars">
+            <div class="radar-item">
+              <span>Sweetness</span>
+              <div class="radar-bar-bg"><div class="radar-bar-fill" id="bar-sweetness"></div></div>
+              <span>40%</span>
+            </div>
+            <div class="radar-item">
+              <span>Acidity</span>
+              <div class="radar-bar-bg"><div class="radar-bar-fill" id="bar-acidity"></div></div>
+              <span>50%</span>
+            </div>
+            <div class="radar-item">
+              <span>Body</span>
+              <div class="radar-bar-bg"><div class="radar-bar-fill" id="bar-body"></div></div>
+              <span>65%</span>
+            </div>
+            <div class="radar-item">
+              <span>Bitterness</span>
+              <div class="radar-bar-bg"><div class="radar-bar-fill" id="bar-bitterness"></div></div>
+              <span>40%</span>
+            </div>
+            <div class="radar-item">
+              <span>Aroma</span>
+              <div class="radar-bar-bg"><div class="radar-bar-fill" id="bar-aroma"></div></div>
+              <span>85%</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="orderItem('Custom Crafted 3D Coffee')">
+          <i class="fas fa-shopping-bag"></i> Order Custom Creation ($6.80)
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: SIGNATURE MENU & FLAVOR EXPLORER -->
+  <section class="section" id="menu">
+    <div class="section-header">
+      <span class="section-subtitle">Artisanal Offerings</span>
+      <h2 class="section-title">Signature Menu & Botanicals</h2>
+      <p class="section-desc">
+        Handcrafted espresso beverages, slow-steeped cold brews, organic teas, and daily oven pastries baked in-house.
+      </p>
+    </div>
+
+    <div class="menu-filter-bar">
+      <button class="filter-btn active" data-cat="all">All Items</button>
+      <button class="filter-btn" data-cat="espresso">Espresso Bar</button>
+      <button class="filter-btn" data-cat="coldbrew">Cold Brew Drafts</button>
+      <button class="filter-btn" data-cat="tea">Specialty Teas</button>
+      <button class="filter-btn" data-cat="bakery">Artisanal Bakery</button>
+    </div>
+
+    <div class="menu-search-wrapper">
+      <i class="fas fa-search menu-search-icon"></i>
+      <input type="text" class="menu-search-input" id="menu-search" placeholder="Search drinks, notes, origins...">
+    </div>
+
+    <div class="menu-grid" id="menu-grid">
+      <!-- Menu cards rendered dynamically via JS -->
+    </div>
+  </section>
+
+  <!-- SECTION 3: ATMOSPHERE & AMBIANCE SHOWCASE -->
+  <section class="section" id="ambiance">
+    <div class="section-header">
+      <span class="section-subtitle">Café Experience</span>
+      <h2 class="section-title">Sensory Atmosphere & Roastery</h2>
+      <p class="section-desc">
+        Designed for deep work, conversations, and quiet moments. Natural oak wood, ambient jazz soundscapes, and freshly roasted aromas.
+      </p>
+    </div>
+
+    <div class="ambiance-wrapper">
+      <div class="ambiance-gallery">
+        <div class="ambiance-img-box">
+          <img src="assets/ambiance.png" alt="Roastery Atmosphere" loading="lazy">
+          <div class="ambiance-img-overlay">Main Roastery Bar</div>
+        </div>
+        <div class="ambiance-img-box">
+          <img src="assets/hero_coffee.png" alt="Espresso Bar" loading="lazy">
+          <div class="ambiance-img-overlay">Artisanal Extraction</div>
+        </div>
+        <div class="ambiance-img-box">
+          <img src="assets/pastry.png" alt="Fresh Pastries" loading="lazy">
+          <div class="ambiance-img-overlay">Morning Bakery Counter</div>
+        </div>
+        <div class="ambiance-img-box">
+          <img src="assets/cold_brew.png" alt="Cold Drafts" loading="lazy">
+          <div class="ambiance-img-overlay">Nitro Tap Lounge</div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="padding: 40px;">
+        <span class="badge-tag"><i class="fas fa-music"></i> Ambient Soundscape Included</span>
+        <h3 style="font-size: 1.8rem; margin-bottom: 16px;">Thoughtfully Crafted Spaces</h3>
+        <p style="margin-bottom: 20px;">
+          Whether you need a sunlit window nook for morning journaling or a quiet barista bar for afternoon espresso tastings, Lumina offers dedicated zones tailored to your flow.
+        </p>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;">
+          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
+            <i class="fas fa-wifi" style="color: var(--accent-gold);"></i> High-Speed 1Gbps Fiber Wi-Fi & Power Outlets
+          </li>
+          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
+            <i class="fas fa-couch" style="color: var(--accent-gold);"></i> Ergonomic Seating & Quiet Lounge Nooks
+          </li>
+          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
+            <i class="fas fa-leaf" style="color: var(--accent-gold);"></i> Sustainable Ethically Sourced Coffee Beans
+          </li>
+        </ul>
+
+        <a href="#reservation" class="btn-primary">Reserve Your Table</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: TABLE RESERVATION & SEATING MAP -->
+  <section class="section" id="reservation">
+    <div class="section-header">
+      <span class="section-subtitle">Seamless Booking</span>
+      <h2 class="section-title">Reserve Table or Study Nook</h2>
+      <p class="section-desc">
+        Select your preferred seating location and time slot. Guaranteed spot with complimentary welcome pour-over.
+      </p>
+    </div>
+
+    <div class="glass-card reservation-card">
+      <div class="reservation-grid">
+        <!-- Interactive Floor Map -->
+        <div class="seating-map">
+          <div class="seating-title">
+            <span><i class="fas fa-map-marked-alt" style="color: var(--accent-gold);"></i> Interactive Floor Plan</span>
+            <span id="selected-seat-display" style="color: var(--accent-gold);">Sunlit Window (Table W1)</span>
+          </div>
+
+          <div class="seats-grid" id="seats-grid">
+            <!-- Rendered by JS -->
+          </div>
+
+          <div style="display: flex; gap: 20px; font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
+            <div><span style="display:inline-block; width:10px; height:10px; background:var(--accent-amber); border-radius:2px;"></span> Selected</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:rgba(255,255,255,0.1); border-radius:2px;"></span> Available</div>
+            <div><span style="display:inline-block; width:10px; height:10px; opacity:0.3; background:rgba(255,255,255,0.1); border-radius:2px;"></span> Reserved</div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form class="reservation-form" id="reservation-form">
+          <div class="form-group">
+            <label for="res-name">Full Name</label>
+            <input type="text" id="res-name" class="form-input" placeholder="e.g. Alex Mercer" required>
+          </div>
+
+          <div class="form-group">
+            <label for="res-guests">Number of Guests</label>
+            <select id="res-guests" class="form-input" required>
+              <option value="1 Guest (Solo Study)">1 Guest (Solo Study)</option>
+              <option value="2 Guests (Table for Two)">2 Guests (Table for Two)</option>
+              <option value="4 Guests (Group Booth)">4 Guests (Group Booth)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="res-date">Reservation Date</label>
+            <input type="date" id="res-date" class="form-input" value="2026-08-05" required>
+          </div>
+
+          <div class="form-group">
+            <label for="res-time">Preferred Time Slot</label>
+            <select id="res-time" class="form-input" required>
+              <option value="08:30 AM">08:30 AM (Morning Brew)</option>
+              <option value="11:00 AM">11:00 AM (Brunch Flow)</option>
+              <option value="02:30 PM">02:30 PM (Afternoon Focus)</option>
+              <option value="06:00 PM">06:00 PM (Sunset Lounge)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary" style="margin-top: 10px;">
+            <i class="fas fa-check-circle"></i> Confirm Table Reservation
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: LOCATION & HOURS -->
+  <section class="section" id="location">
+    <div class="section-header">
+      <span class="section-subtitle">Visit Lumina</span>
+      <h2 class="section-title">Hours & Roastery Location</h2>
+      <p class="section-desc">
+        Located in the heart of the cultural district. Stop by for your daily roast or pick up fresh roasted beans.
+      </p>
+    </div>
+
+    <div class="location-grid">
+      <div class="glass-card hours-card">
+        <h3 style="font-size: 1.5rem; margin-bottom: 12px;">Opening Hours</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary);">Fresh espresso & pastries served daily.</p>
+
+        <div class="hours-list">
+          <div class="hours-row today">
+            <span>Monday – Friday</span>
+            <span>07:00 AM – 10:00 PM</span>
+          </div>
+          <div class="hours-row">
+            <span>Saturday</span>
+            <span>08:00 AM – 10:00 PM</span>
+          </div>
+          <div class="hours-row">
+            <span>Sunday</span>
+            <span>08:00 AM – 08:00 PM</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+          <p style="font-size: 0.9rem; color: var(--text-primary); font-weight: 600;">
+            <i class="fas fa-map-marker-alt" style="color: var(--accent-gold); margin-right: 8px;"></i> Lumina Roastery HQ
+          </p>
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
+            428 Grand Artisan Way, Suite 100 • Metro Arts District
+          </p>
+        </div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-overlay">
+          <i class="fas fa-compass" style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 14px;"></i>
+          <h3 style="color: var(--text-primary); font-size: 1.5rem;">Metro Arts District</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; max-width: 280px; margin-top: 6px;">
+            Valet parking available & 2-minute walk from Central Station.
+          </p>
+          <a href="https://maps.google.com" target="_blank" class="btn-secondary" style="margin-top: 20px; font-size: 0.85rem;">
+            Get Directions <i class="fas fa-external-link-alt"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ITEM DETAILS MODAL -->
+  <div class="modal-overlay" id="details-modal">
+    <div class="modal-content glass-card">
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      <div id="modal-body">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <a href="#" class="brand-logo">
+          <i class="fas fa-coffee" style="color:var(--accent-gold);"></i> LUMINA<span>.</span>
+        </a>
+        <p>
+          Artisanal coffee roastery, 3D web experience, and neighborhood lounge dedicated to the craft of exceptional coffee.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="#customizer">3D Lab</a></li>
+          <li><a href="#menu">Menu</a></li>
+          <li><a href="#ambiance">Ambiance</a></li>
+          <li><a href="#reservation">Reservations</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Roast Beans</h4>
+        <ul>
+          <li><a href="#">Ethiopian Yirgacheffe</a></li>
+          <li><a href="#">Colombian Huila</a></li>
+          <li><a href="#">Sumatra Dark Roast</a></li>
+          <li><a href="#">Bean Subscription</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <div style="display: flex; gap: 14px; margin-top: 10px;">
+          <a href="#" class="btn-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="btn-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="btn-icon"><i class="fab fa-facebook-f"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2026 Lumina Artisanal Roastery & Café. Crafted with 3D Web Technology.
+    </div>
+  </footer>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
