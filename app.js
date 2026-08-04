@@ -148,70 +148,277 @@ function initHero3DCanvas() {
 }
 
 /* ==========================================================================
-   2. 3D INTERACTIVE DRINK CRAFTING LAB (360 CANVAS ENGINE)
+   2. 3D INTERACTIVE DRINK CRAFTING LAB (PHOTOREALISTIC THREE.JS WEBGL ENGINE)
    ========================================================================== */
 function initDrinkCustomizerCanvas() {
   const canvas = document.getElementById('customizer-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  if (!canvas || typeof THREE === 'undefined') return;
+  const container = canvas.parentElement;
 
-  function resize() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
+  // 1. Scene Setup
+  const scene = new THREE.Scene();
+
+  // Camera Setup
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.set(0, 14, 28);
+
+  // WebGL Renderer
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.25;
+
+  // 360-Degree Orbit Controls
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.maxPolarAngle = Math.PI / 2 + 0.1;
+  controls.minDistance = 14;
+  controls.maxDistance = 42;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.0;
+
+  // Pause auto-rotate when user starts dragging
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+  // Lighting Setup
+  const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.8);
+  scene.add(ambientLight);
+
+  const mainLight = new THREE.DirectionalLight(0xffedd8, 2.2);
+  mainLight.position.set(16, 26, 16);
+  mainLight.castShadow = true;
+  mainLight.shadow.mapSize.width = 1024;
+  mainLight.shadow.mapSize.height = 1024;
+  mainLight.shadow.bias = -0.001;
+  scene.add(mainLight);
+
+  const fillLight = new THREE.DirectionalLight(0xd97724, 0.9);
+  fillLight.position.set(-16, 10, -16);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.SpotLight(0xffe5c4, 3.5);
+  rimLight.position.set(0, 22, -22);
+  scene.add(rimLight);
+
+  // Materials Setup - Glossy Porcelain & Coaster
+  const ceramicMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xf5ebe1,
+    roughness: 0.12,
+    metalness: 0.02,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    reflectivity: 0.95
+  });
+
+  const coasterMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1d1714,
+    roughness: 0.75,
+    metalness: 0.1
+  });
+
+  // 3D Ceramic Mug Geometry (Smooth Lathe Curve)
+  const points = [];
+  points.push(new THREE.Vector2(2.5, 0));
+  points.push(new THREE.Vector2(2.7, 0.2));
+  points.push(new THREE.Vector2(4.2, 5.0));
+  points.push(new THREE.Vector2(4.3, 5.5));
+  points.push(new THREE.Vector2(4.1, 5.6));
+  points.push(new THREE.Vector2(3.9, 5.4));
+  points.push(new THREE.Vector2(3.8, 5.0));
+  points.push(new THREE.Vector2(2.3, 0.4));
+  points.push(new THREE.Vector2(0.0, 0.4));
+
+  const cupGeometry = new THREE.LatheGeometry(points, 64);
+  const cupMesh = new THREE.Mesh(cupGeometry, ceramicMaterial);
+  cupMesh.castShadow = true;
+  cupMesh.receiveShadow = true;
+  scene.add(cupMesh);
+
+  // Ergonomic 3D Handle
+  const handleGeo = new THREE.TorusGeometry(1.85, 0.38, 16, 32, Math.PI * 1.1);
+  const handleMesh = new THREE.Mesh(handleGeo, ceramicMaterial);
+  handleMesh.position.set(4.0, 2.8, 0);
+  handleMesh.rotation.z = -Math.PI / 6;
+  handleMesh.rotation.y = Math.PI / 2;
+  handleMesh.castShadow = true;
+  scene.add(handleMesh);
+
+  // Ceramic Saucer Plate
+  const saucerPoints = [];
+  saucerPoints.push(new THREE.Vector2(0, 0));
+  saucerPoints.push(new THREE.Vector2(3.2, 0.1));
+  saucerPoints.push(new THREE.Vector2(6.5, 1.0));
+  saucerPoints.push(new THREE.Vector2(6.8, 1.2));
+  saucerPoints.push(new THREE.Vector2(6.6, 1.25));
+  saucerPoints.push(new THREE.Vector2(6.3, 0.9));
+  saucerPoints.push(new THREE.Vector2(3.0, 0.05));
+  saucerPoints.push(new THREE.Vector2(0, 0.05));
+  const saucerGeo = new THREE.LatheGeometry(saucerPoints, 64);
+  const saucerMesh = new THREE.Mesh(saucerGeo, ceramicMaterial);
+  saucerMesh.position.y = -0.1;
+  saucerMesh.castShadow = true;
+  saucerMesh.receiveShadow = true;
+  scene.add(saucerMesh);
+
+  // Wooden/Slate Coaster Base
+  const coasterGeo = new THREE.CylinderGeometry(8.5, 8.8, 0.4, 64);
+  const coasterMesh = new THREE.Mesh(coasterGeo, coasterMaterial);
+  coasterMesh.position.y = -0.3;
+  coasterMesh.receiveShadow = true;
+  scene.add(coasterMesh);
+
+  // Dynamic Liquid & Latte Art Texture Generator
+  const textureCanvas = document.createElement('canvas');
+  textureCanvas.width = 512;
+  textureCanvas.height = 512;
+  const texCtx = textureCanvas.getContext('2d');
+  const liquidTexture = new THREE.CanvasTexture(textureCanvas);
+
+  const liquidMat = new THREE.MeshStandardMaterial({
+    map: liquidTexture,
+    roughness: 0.35,
+    metalness: 0.05
+  });
+
+  const liquidGeo = new THREE.CircleGeometry(3.9, 64);
+  const liquidMesh = new THREE.Mesh(liquidGeo, liquidMat);
+  liquidMesh.rotation.x = -Math.PI / 2;
+  liquidMesh.position.y = 4.8;
+  scene.add(liquidMesh);
 
   // Customizer State
   const state = {
-    roast: 'medium', // light, medium, dark
-    base: 'latte',   // espresso, latte, cappuccino, macchiato
-    milk: 'oat',     // whole, oat, almond, coconut
-    latteArt: 'rosetta', // rosetta, heart, tulip
+    roast: 'medium',
+    base: 'latte',
+    art: 'rosetta',
     foamHeight: 0.6,
-    sweetness: 2,
-    topping: 'cocoa', // cocoa, cinnamon, caramel
-    rotation: 0.3,
-    isDragging: false,
-    lastX: 0
+    sweetness: 2
   };
 
-  // Drag to rotate 3D Cup
-  canvas.addEventListener('mousedown', (e) => {
-    state.isDragging = true;
-    state.lastX = e.clientX;
-  });
+  function generateLatteTexture() {
+    texCtx.clearRect(0, 0, 512, 512);
 
-  window.addEventListener('mouseup', () => state.isDragging = false);
-  canvas.addEventListener('mousemove', (e) => {
-    if (!state.isDragging) return;
-    const deltaX = e.clientX - state.lastX;
-    state.rotation += deltaX * 0.01;
-    state.lastX = e.clientX;
-  });
+    const cx = 256, cy = 256, r = 250;
 
-  // Touch support
-  canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      state.isDragging = true;
-      state.lastX = e.touches[0].clientX;
+    // Crema Base Color based on Roast
+    let cremaBg = '#3D2012';
+    if (state.roast === 'light') cremaBg = '#6B3C20';
+    if (state.roast === 'dark') cremaBg = '#221008';
+
+    // Outer Crema Gradient
+    const grad = texCtx.createRadialGradient(cx, cy, 40, cx, cy, r);
+    grad.addColorStop(0, '#F5ECE3');
+    grad.addColorStop(0.65, '#E8D6C3');
+    grad.addColorStop(0.85, cremaBg);
+    grad.addColorStop(1, '#1A0C06');
+
+    texCtx.fillStyle = grad;
+    texCtx.beginPath();
+    texCtx.arc(cx, cy, r, 0, Math.PI * 2);
+    texCtx.fill();
+
+    // Micro-bubbles texture
+    texCtx.fillStyle = 'rgba(100, 50, 20, 0.15)';
+    for (let i = 0; i < 350; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = Math.random() * (r - 25);
+      texCtx.beginPath();
+      texCtx.arc(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist, Math.random() * 2 + 0.5, 0, Math.PI * 2);
+      texCtx.fill();
     }
-  });
-  canvas.addEventListener('touchmove', (e) => {
-    if (state.isDragging && e.touches.length === 1) {
-      const deltaX = e.touches[0].clientX - state.lastX;
-      state.rotation += deltaX * 0.01;
-      state.lastX = e.touches[0].clientX;
-    }
-  });
-  window.addEventListener('touchend', () => state.isDragging = false);
 
-  // UI Event Listeners
+    // High detail Latte Art Drawing
+    texCtx.save();
+    texCtx.translate(cx, cy);
+    texCtx.fillStyle = '#4A2511';
+    texCtx.strokeStyle = '#4A2511';
+    texCtx.lineWidth = 6;
+    texCtx.lineCap = 'round';
+
+    if (state.art === 'heart') {
+      texCtx.beginPath();
+      texCtx.moveTo(0, 40);
+      texCtx.bezierCurveTo(-90, -40, -90, -120, 0, -50);
+      texCtx.bezierCurveTo(90, -120, 90, -40, 0, 40);
+      texCtx.fill();
+
+      texCtx.fillStyle = '#FAF3EB';
+      texCtx.beginPath();
+      texCtx.moveTo(0, 20);
+      texCtx.bezierCurveTo(-60, -30, -60, -80, 0, -35);
+      texCtx.bezierCurveTo(60, -80, 60, -30, 0, 20);
+      texCtx.fill();
+    } else if (state.art === 'rosetta') {
+      for (let i = 0; i < 9; i++) {
+        const y = -120 + i * 28;
+        const w = (9 - i) * 14;
+        texCtx.beginPath();
+        texCtx.ellipse(0, y, w, w * 0.45, 0, 0, Math.PI * 2);
+        texCtx.fill();
+
+        texCtx.fillStyle = '#F5ECE3';
+        texCtx.beginPath();
+        texCtx.ellipse(0, y, w * 0.7, w * 0.3, 0, 0, Math.PI * 2);
+        texCtx.fill();
+        texCtx.fillStyle = '#4A2511';
+      }
+      texCtx.beginPath();
+      texCtx.moveTo(0, -140);
+      texCtx.lineTo(0, 100);
+      texCtx.stroke();
+    } else {
+      for (let i = 0; i < 4; i++) {
+        const y = -90 + i * 45;
+        const size = 65 - i * 8;
+        texCtx.beginPath();
+        texCtx.arc(0, y, size, Math.PI * 0.15, Math.PI * 0.85, true);
+        texCtx.fill();
+      }
+    }
+    texCtx.restore();
+
+    liquidTexture.needsUpdate = true;
+  }
+
+  generateLatteTexture();
+
+  // Volumetric 3D Steam Particles
+  const steamCount = 45;
+  const steamGeo = new THREE.BufferGeometry();
+  const steamPositions = new Float32Array(steamCount * 3);
+  const steamSpeeds = [];
+
+  for (let i = 0; i < steamCount; i++) {
+    steamPositions[i * 3] = (Math.random() - 0.5) * 3;
+    steamPositions[i * 3 + 1] = 5 + Math.random() * 8;
+    steamPositions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+    steamSpeeds.push(Math.random() * 0.04 + 0.02);
+  }
+
+  steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPositions, 3));
+
+  const pMat = new THREE.PointsMaterial({
+    color: 0xfff5ea,
+    size: 1.4,
+    transparent: true,
+    opacity: 0.35,
+    blending: THREE.AdditiveBlending
+  });
+
+  const steamParticles = new THREE.Points(steamGeo, pMat);
+  scene.add(steamParticles);
+
+  // Event Listeners for Customizer Options
   document.querySelectorAll('[data-opt="base"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('[data-opt="base"]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.base = btn.dataset.val;
+      generateLatteTexture();
       updateFlavorRadar();
     });
   });
@@ -221,6 +428,7 @@ function initDrinkCustomizerCanvas() {
       document.querySelectorAll('[data-opt="roast"]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.roast = btn.dataset.val;
+      generateLatteTexture();
       updateFlavorRadar();
     });
   });
@@ -229,7 +437,8 @@ function initDrinkCustomizerCanvas() {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('[data-opt="art"]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      state.latteArt = btn.dataset.val;
+      state.art = btn.dataset.val;
+      generateLatteTexture();
     });
   });
 
@@ -237,6 +446,7 @@ function initDrinkCustomizerCanvas() {
   if (foamSlider) {
     foamSlider.addEventListener('input', (e) => {
       state.foamHeight = parseFloat(e.target.value);
+      liquidMesh.position.y = 4.2 + state.foamHeight * 0.8;
     });
   }
 
@@ -249,7 +459,6 @@ function initDrinkCustomizerCanvas() {
   }
 
   function updateFlavorRadar() {
-    // Dynamically calculate taste metrics
     let sweetness = state.sweetness * 20;
     let body = state.roast === 'dark' ? 90 : (state.roast === 'medium' ? 65 : 45);
     let acidity = state.roast === 'light' ? 85 : (state.roast === 'medium' ? 50 : 20);
@@ -270,182 +479,36 @@ function initDrinkCustomizerCanvas() {
 
   updateFlavorRadar();
 
-  // Render 3D Coffee Cup Geometry with dynamic shading
-  function draw3DCup() {
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2 + 30;
-    const rTop = 110;
-    const rBottom = 70;
-    const height = 150;
+  // Resize Handler
+  window.addEventListener('resize', () => {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  });
 
-    // Cup Colors
-    const cupColor = '#F4EBE1';
-    const shadowColor = 'rgba(0,0,0,0.5)';
+  // Animation Frame Loop
+  function animate() {
+    requestAnimationFrame(animate);
 
-    // Liquid Colors based on roast
-    let liquidColor = '#3A1F12';
-    if (state.roast === 'light') liquidColor = '#6A3B21';
-    if (state.roast === 'dark') liquidColor = '#21110A';
-
-    let foamColor = '#FAF3EB';
-    if (state.base === 'espresso') foamColor = '#C8935C'; // Crema
-
-    // Rotate angle calculation
-    const rot = state.rotation;
-    const tilt = 0.25; // fixed perspective tilt
-
-    // 1. Draw Cup Shadow
-    ctx.save();
-    ctx.translate(cx, cy + height / 2 + 20);
-    ctx.scale(1, 0.4);
-    const shadowGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, rTop + 40);
-    shadowGrad.addColorStop(0, 'rgba(0,0,0,0.6)');
-    shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = shadowGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, rTop + 40, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 2. Draw Ceramic Cup Body (Cylinder)
-    ctx.save();
-    ctx.translate(cx, cy);
-
-    // Cup Handle (3D Curve)
-    const handleAngle = rot + Math.PI / 2;
-    const handleX = Math.cos(handleAngle) * (rTop + 20);
-    const handleY = Math.sin(handleAngle) * tilt * 50;
-
-    ctx.lineWidth = 18;
-    ctx.strokeStyle = '#E6DCCE';
-    ctx.beginPath();
-    ctx.arc(Math.cos(rot + Math.PI / 4) * 90, 0, 45, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Outer Cup Body Gradient
-    const bodyGrad = ctx.createLinearGradient(-rTop, -height/2, rTop, height/2);
-    bodyGrad.addColorStop(0, '#FFFFFF');
-    bodyGrad.addColorStop(0.3, '#EBE0D2');
-    bodyGrad.addColorStop(0.8, '#C4B4A0');
-    bodyGrad.addColorStop(1, '#8A7A68');
-
-    // Draw Main Body Geometry
-    ctx.beginPath();
-    ctx.ellipse(0, -height / 2, rTop, rTop * tilt, 0, Math.PI, 0, true);
-    ctx.lineTo(rBottom, height / 2);
-    ctx.ellipse(0, height / 2, rBottom, rBottom * tilt, 0, 0, Math.PI, false);
-    ctx.lineTo(-rTop, -height / 2);
-    ctx.fillStyle = bodyGrad;
-    ctx.fill();
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // 3. Draw Liquid & Foam Interior
-    const liquidY = -height / 2 + 15;
-    const liquidR = rTop - 10;
-
-    // Liquid Surface (Ellipse)
-    ctx.save();
-    ctx.translate(0, liquidY);
-    ctx.scale(1, tilt);
-
-    ctx.beginPath();
-    ctx.arc(0, 0, liquidR, 0, Math.PI * 2);
-    ctx.fillStyle = liquidColor;
-    ctx.fill();
-
-    // Foam Layer Surface
-    if (state.base !== 'espresso' || state.foamHeight > 0.2) {
-      const foamR = liquidR * (0.85 + state.foamHeight * 0.12);
-      ctx.beginPath();
-      ctx.arc(0, 0, foamR, 0, Math.PI * 2);
-      const foamGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, foamR);
-      foamGrad.addColorStop(0, foamColor);
-      foamGrad.addColorStop(0.85, '#E8DACC');
-      foamGrad.addColorStop(1, '#C8B29C');
-      ctx.fillStyle = foamGrad;
-      ctx.fill();
-
-      // 4. Draw Latte Art Pattern (Rosetta / Heart / Tulip)
-      drawLatteArt(ctx, state.latteArt, foamR);
-    }
-
-    ctx.restore();
-    ctx.restore();
-
-    // 5. Rising Steam Particles from Customizer Cup
-    drawCustomizerSteam(ctx, cx, cy - height / 2 - 20);
-  }
-
-  function drawLatteArt(ctx, artType, size) {
-    ctx.save();
-    ctx.strokeStyle = '#6E3B1C';
-    ctx.fillStyle = '#6E3B1C';
-    ctx.lineWidth = 3;
-
-    if (artType === 'heart') {
-      ctx.beginPath();
-      ctx.moveTo(0, 10);
-      ctx.bezierCurveTo(-size * 0.4, -size * 0.3, -size * 0.4, -size * 0.7, 0, -size * 0.3);
-      ctx.bezierCurveTo(size * 0.4, -size * 0.7, size * 0.4, -size * 0.3, 0, 10);
-      ctx.fill();
-    } else if (artType === 'rosetta') {
-      // Draw layered Rosetta leaves
-      for (let i = 0; i < 6; i++) {
-        const y = -size * 0.6 + i * (size * 0.18);
-        const w = (6 - i) * 8;
-        ctx.beginPath();
-        ctx.ellipse(0, y, w, w * 0.4, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.beginPath();
-      ctx.moveTo(0, -size * 0.7);
-      ctx.lineTo(0, size * 0.5);
-      ctx.stroke();
-    } else {
-      // Tulip
-      for (let i = 0; i < 3; i++) {
-        const y = -size * 0.4 + i * 15;
-        ctx.beginPath();
-        ctx.arc(0, y, 20 - i * 4, Math.PI * 0.2, Math.PI * 0.8, true);
-        ctx.fill();
+    // Update 3D Steam Particles
+    const positions = steamGeo.attributes.position.array;
+    for (let i = 0; i < steamCount; i++) {
+      positions[i * 3 + 1] += steamSpeeds[i];
+      positions[i * 3] += Math.sin(positions[i * 3 + 1] * 0.5) * 0.015;
+      if (positions[i * 3 + 1] > 14) {
+        positions[i * 3 + 1] = 5.0;
+        positions[i * 3] = (Math.random() - 0.5) * 3;
       }
     }
-    ctx.restore();
+    steamGeo.attributes.position.needsUpdate = true;
+
+    controls.update();
+    renderer.render(scene, camera);
   }
 
-  const customSteam = Array.from({ length: 15 }, () => ({
-    x: 0, y: 0, r: Math.random() * 10 + 5, a: Math.random() * 0.3 + 0.1
-  }));
-
-  function drawCustomizerSteam(ctx, x, y) {
-    customSteam.forEach(s => {
-      s.y -= 0.6;
-      s.a -= 0.003;
-      if (s.a <= 0) {
-        s.y = 0;
-        s.x = (Math.random() - 0.5) * 30;
-        s.a = Math.random() * 0.3 + 0.1;
-      }
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, s.a);
-      ctx.fillStyle = 'rgba(255, 245, 235, 0.2)';
-      ctx.beginPath();
-      ctx.arc(x + s.x + Math.sin(s.y * 0.05) * 10, y + s.y, s.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-  }
-
-  function renderCustomizer() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    state.rotation += 0.002; // slow auto spin
-    draw3DCup();
-    requestAnimationFrame(renderCustomizer);
-  }
-  renderCustomizer();
+  animate();
 }
 
 /* ==========================================================================
