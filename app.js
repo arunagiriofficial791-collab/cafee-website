@@ -15,136 +15,129 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   1. HERO 3D CANVAS & BEAN/STEAM PARTICLE PHYSICS
+   1. HERO 3D WEBGL CANVAS WITH FLOATING 3D BEANS & PARALLAX
    ========================================================================== */
 function initHero3DCanvas() {
   const canvas = document.getElementById('hero-3d-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  if (!canvas || typeof THREE === 'undefined') return;
+  const container = canvas.parentElement;
 
-  function resize() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
+  // Scene Setup
+  const scene = new THREE.Scene();
 
-  // Floating Coffee Bean Class
-  class CoffeeBean {
-    constructor() {
-      this.reset(true);
-    }
-    reset(initial = false) {
-      this.x = Math.random() * canvas.width;
-      this.y = initial ? Math.random() * canvas.height : canvas.height + 40;
-      this.size = Math.random() * 12 + 10;
-      this.speedY = Math.random() * 0.8 + 0.3;
-      this.speedX = Math.sin(Math.random() * Math.PI) * 0.4;
-      this.rotation = Math.random() * Math.PI * 2;
-      this.rotSpeed = (Math.random() - 0.5) * 0.02;
-      this.opacity = Math.random() * 0.5 + 0.3;
-    }
-    update() {
-      this.y -= this.speedY;
-      this.x += Math.sin(this.y * 0.01) * 0.4;
-      this.rotation += this.rotSpeed;
-      if (this.y < -50) this.reset();
-    }
-    draw() {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      ctx.globalAlpha = this.opacity;
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.set(0, 5, 25);
 
-      // Draw 3D-styled Roasted Coffee Bean shape
-      ctx.fillStyle = '#4A2511';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, this.size, this.size * 0.65, 0, 0, Math.PI * 2);
-      ctx.fill();
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-      // Bean crease line
-      ctx.strokeStyle = '#251207';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-this.size * 0.7, 0);
-      ctx.bezierCurveTo(-this.size * 0.2, -this.size * 0.3, this.size * 0.2, this.size * 0.3, this.size * 0.7, 0);
-      ctx.stroke();
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.9);
+  scene.add(ambientLight);
 
-      // Highlight
-      ctx.fillStyle = 'rgba(229, 169, 103, 0.2)';
-      ctx.beginPath();
-      ctx.ellipse(-this.size * 0.2, -this.size * 0.2, this.size * 0.3, this.size * 0.15, -0.4, 0, Math.PI * 2);
-      ctx.fill();
+  const keyLight = new THREE.DirectionalLight(0xe5a967, 2.5);
+  keyLight.position.set(12, 18, 12);
+  scene.add(keyLight);
 
-      ctx.restore();
-    }
-  }
+  const rimLight = new THREE.SpotLight(0xd97724, 3.0);
+  rimLight.position.set(-10, -5, -10);
+  scene.add(rimLight);
 
-  // Steam Particle Class
-  class SteamParticle {
-    constructor() {
-      this.reset();
-    }
-    reset() {
-      this.x = canvas.width / 2 + (Math.random() - 0.5) * 60;
-      this.y = canvas.height / 2 + 50;
-      this.radius = Math.random() * 20 + 10;
-      this.speedY = Math.random() * 1.2 + 0.8;
-      this.speedX = (Math.random() - 0.5) * 0.5;
-      this.alpha = Math.random() * 0.4 + 0.1;
-      this.maxAlpha = this.alpha;
-    }
-    update() {
-      this.y -= this.speedY;
-      this.x += Math.sin(this.y * 0.02) * 0.8;
-      this.radius += 0.4;
-      this.alpha -= 0.005;
-      if (this.alpha <= 0 || this.y < canvas.height / 2 - 200) this.reset();
-    }
-    draw() {
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, this.alpha);
-      const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-      grad.addColorStop(0, 'rgba(255, 245, 235, 0.25)');
-      grad.addColorStop(1, 'rgba(255, 245, 235, 0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  const beans = Array.from({ length: 22 }, () => new CoffeeBean());
-  const steams = Array.from({ length: 30 }, () => new SteamParticle());
-
-  // Mouse Parallax Logic
-  let mouseX = 0, mouseY = 0;
-  canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = (e.clientX - rect.left - canvas.width / 2) * 0.05;
-    mouseY = (e.clientY - rect.top - canvas.height / 2) * 0.05;
+  // 3D Coffee Bean Material & Geometry
+  const beanMaterial = new THREE.MeshStandardMaterial({
+    color: 0x4a2511,
+    roughness: 0.35,
+    metalness: 0.1
   });
 
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Render beans
-    beans.forEach(b => {
-      b.x += mouseX * 0.05;
-      b.update();
-      b.draw();
-    });
+  const beanGeo = new THREE.SphereGeometry(1.0, 16, 16);
+  beanGeo.scale(1.2, 0.7, 0.7); // Shape like a roasted coffee bean
 
-    // Render steam particles rising from center
-    steams.forEach(s => {
-      s.update();
-      s.draw();
-    });
+  // Create 25 Floating 3D Coffee Beans in 3D Space
+  const beans = [];
+  const beanCount = 25;
 
-    requestAnimationFrame(render);
+  for (let i = 0; i < beanCount; i++) {
+    const mesh = new THREE.Mesh(beanGeo, beanMaterial);
+    mesh.position.set(
+      (Math.random() - 0.5) * 22,
+      (Math.random() - 0.5) * 18,
+      (Math.random() - 0.5) * 14
+    );
+    mesh.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+
+    const scale = Math.random() * 0.5 + 0.6;
+    mesh.scale.set(scale * 1.2, scale * 0.7, scale * 0.7);
+
+    scene.add(mesh);
+    beans.push({
+      mesh: mesh,
+      rotSpeedX: (Math.random() - 0.5) * 0.015,
+      rotSpeedY: (Math.random() - 0.5) * 0.015,
+      floatSpeed: Math.random() * 0.01 + 0.005,
+      initialY: mesh.position.y
+    });
   }
-  render();
+
+  // 3D Central Glowing Pedestal / Cup Shadow
+  const pedestalGeo = new THREE.CylinderGeometry(4.5, 5.0, 0.4, 32);
+  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x1c1714, roughness: 0.8 });
+  const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+  pedestal.position.y = -5;
+  scene.add(pedestal);
+
+  // Mouse Parallax Effect
+  let mouseX = 0, mouseY = 0;
+  let targetX = 0, targetY = 0;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 6;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 4;
+  });
+
+  // Handle Resize
+  window.addEventListener('resize', () => {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  });
+
+  // Render Loop
+  let clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const elapsedTime = clock.getElapsedTime();
+
+    // Smooth Mouse Parallax
+    targetX += (mouseX - targetX) * 0.05;
+    targetY += (mouseY - targetY) * 0.05;
+    camera.position.x = targetX;
+    camera.position.y = 5 - targetY;
+    camera.lookAt(0, 0, 0);
+
+    // Animate 3D Floating Coffee Beans
+    beans.forEach(b => {
+      b.mesh.rotation.x += b.rotSpeedX;
+      b.mesh.rotation.y += b.rotSpeedY;
+      b.mesh.position.y = b.initialY + Math.sin(elapsedTime * 1.5 + b.mesh.position.x) * 0.8;
+    });
+
+    pedestal.rotation.y += 0.003;
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
 }
 
 /* ==========================================================================
@@ -565,7 +558,7 @@ const MENU_DATA = [
     category: 'coldbrew',
     price: '$6.20',
     desc: 'Slow glass drip extraction over 8 hours creating floral jasmine notes and smooth finish.',
-    image: 'assets/specialty_cold_brew.png',
+    image: 'assets/cold_brew.png',
     tags: ['Limited Batch', 'Floral'],
     calories: '5 kcal',
     origin: 'Kyoto Style Drip'

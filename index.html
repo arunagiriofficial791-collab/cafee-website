@@ -18,9 +18,6 @@
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Spline Viewer Script Tag -->
-  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.72/build/spline-viewer.js"></script>
 </head>
 <body>
 
@@ -96,13 +93,12 @@
 
     <div class="hero-3d-wrapper">
       <div class="spline-container">
-        <!-- Spline 3D Scene Viewer with Fallback 3D Canvas Physics -->
-        <spline-viewer url="https://prod.spline.design/6W201E7M272J1W23/scene.splinecode" loading-anim-type="spinner"></spline-viewer>
+        <!-- Interactive 3D WebGL Hero Canvas -->
         <canvas id="hero-3d-canvas" class="canvas-hero-3d"></canvas>
       </div>
 
       <div class="hero-3d-badge">
-        <i class="fas fa-hand-pointer"></i> Drag mouse to interact with floating 3D roast particles & steam
+        <i class="fas fa-hand-pointer"></i> Move cursor / drag mouse to interact with 3D roasted beans & steam
       </div>
     </div>
   </header>
